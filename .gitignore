@@ -1,0 +1,7 @@
+*.sdf
+*.user
+*.opensdf
+Release
+Debug
+*.dll
+*.zip

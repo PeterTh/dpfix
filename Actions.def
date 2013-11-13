@@ -1,0 +1,35 @@
+
+// Cursor Actions
+
+ACTION(toggleCursorVisibility, WindowManager::get().toggleCursorVisibility())
+ACTION(toggleCursorCapture, WindowManager::get().toggleCursorCapture())
+
+// Window Actions
+
+ACTION(toggleBorderlessFullscreen, WindowManager::get().toggleBorderlessFullscreen())
+
+// Screenshot Actions
+
+ACTION(takeScreenshot, RSManager::get().enableTakeScreenshot())
+ACTION(takeHudlessScreenshot, RSManager::get().enableTakeHudlessScreenshot())
+
+// Graphics Actions
+
+ACTION(toggleAA, RSManager::get().toggleAA())
+ACTION(toggleVSSAO, RSManager::get().toggleVssao())
+ACTION(toggleDofGauss, RSManager::get().toggleDofGauss())
+
+ACTION(toggleHUD, RSManager::get().toggleHideHud())
+
+ACTION(toggle30FPSLimit, Settings::get().toggle30FPSLimit())
+
+// Development Actions
+
+ACTION(reloadVSSAOEffect, RSManager::get().reloadVssao())
+ACTION(reloadHBAOEffect, RSManager::get().reloadHbao())
+ACTION(reloadSCAOEffect, RSManager::get().reloadScao())
+ACTION(reloadGAUSSEffect, RSManager::get().reloadGauss())
+ACTION(reloadAAEffect, RSManager::get().reloadAA())
+
+ACTION(singleFrameFullCapture, RSManager::get().enableSingleFrameCapture())
+ACTION(userTrigger, SDLOG(0, "================================================================= USER TRIGGER ===\n"))

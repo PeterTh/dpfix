@@ -1,0 +1,66 @@
+// xmacro file for .ini setting definition
+// format: (type, cname, ininame, default value) 
+	
+// Graphics Options
+SETTING(unsigned, RenderWidth, "renderWidth", 1024);
+SETTING(unsigned, RenderHeight, "renderHeight", 720);
+SETTING(unsigned, FilteringOverride, "filteringOverride", 0);
+
+SETTING(bool, ImproveDOF, "improveDOF", false);
+
+SETTING(unsigned, AAQuality, "aaQuality", 0);
+SETTING(std::string, AAType, "aaType", "FXAA");
+
+SETTING(unsigned, SsaoStrength, "ssaoStrength", 0);
+SETTING(unsigned, SsaoScale, "ssaoScale", 0);
+SETTING(std::string, SsaoType, "ssaoType", "VSSAO");
+
+SETTING(bool, UnlockFPS, "unlockFPS", 0);
+SETTING(unsigned, FPSLimit, "FPSlimit", 30);
+SETTING(unsigned, FPSThreshold, "FPSthreshold", 28);
+
+SETTING(bool, EnableTripleBuffering, "enableTripleBuffering", false);
+
+SETTING(unsigned, ShadowMapScale, "shadowMapScale", 1);
+SETTING(bool, ImproveShadowPrecision, "improveShadowPrecision", false);
+
+SETTING(unsigned, ReflectionScale, "reflectionScale", 1);
+
+
+// Input options
+SETTING(bool, DisableJoystick, "disableJoystick", false);
+
+// Logging Options
+SETTING(unsigned, LogLevel, "logLevel", 0);
+	
+// Cursor Options
+SETTING(bool, DisableCursor, "disableCursor", false);
+SETTING(bool, CaptureCursor, "captureCursor", false);
+	
+// Wrapper chaining options
+SETTING(std::string, Dinput8dllWrapper, "dinput8dllWrapper", "");
+
+// Folder options
+SETTING(std::string, ScreenshotDir, "screenshotDir", ".");
+
+// Texture Override Options
+SETTING(bool, EnableTextureDumping, "enableTextureDumping", false);
+SETTING(bool, EnableTextureOverride, "enableTextureOverride", false);
+
+// HUD options
+SETTING(bool, EnableHudMod, "enableHudMod", false)
+SETTING(bool, EnableMinimalHud, "enableMinimalHud", false)
+SETTING(float, HudScaleFactor, "hudScaleFactor", 1.0f)
+SETTING(float, HudTopLeftOpacity, "hudTopLeftOpacity", 1.0f)
+SETTING(float, HudBottomLeftOpacity, "hudBottomLeftOpacity", 1.0f)
+SETTING(float, HudBottomRightOpacity, "hudBottomRightOpacity", 1.0f)
+
+// Screen Options
+SETTING(bool, BorderlessFullscreen, "borderlessFullscreen", false);
+SETTING(bool, ForceFullscreen, "forceFullscreen", false);
+SETTING(bool, ForceWindowed, "forceWindowed", false);
+SETTING(unsigned, PresentWidth, "presentWidth", 0);
+SETTING(unsigned, PresentHeight, "presentHeight", 0);
+SETTING(bool, EnableVsync, "enableVsync", true);
+SETTING(unsigned, FullscreenHz, "fullscreenHz", 60);
+SETTING(int, D3DAdapterOverride, "d3dAdapterOverride", -1);

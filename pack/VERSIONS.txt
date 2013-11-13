@@ -1,0 +1,52 @@
+
+??-11-2013 -- version 0.9
+===============================
+- Adjusted windowed mode so that it's possible to move the window
+
+
+10-11-2013 -- version 0.8
+===============================
+- Fixed pixel offset error in light buffer with higher rendering resolution (caused small halos around some objects)
+- Fixed AA not being correctly applied when the game uses the alternative rendering path (e.g. in the gallery)
+- Added option to improve the Depth of Field effect (reduces flicker/pixelation)
+- Added intial version of SSAO (screen space ambient occlusion) option
+
+07-11-2013 -- version 0.7.1
+===============================
+- Fixed an issue that could happen when reloading and encountering a dual-perspective scene twice
+
+07-11-2013 -- version 0.7
+===============================
+- Fixed crash when accessing the Add-ons menu (might also fix other crashes)
+- Added the ability to improve shadow rendering: shadow map resolution and precision settings
+- Added reflection resolution setting
+
+04-11-2013 -- version 0.6
+===============================
+- Fixed crash caused by using the texture override functionality 
+- Added screenshot functions for both normal and hudless screenshots
+
+03-11-2013 -- version 0.5
+===============================
+- Fixed additional map locations/sizes for main menu map and large overlay map
+- Fixed positioning and size in scenes with 2 viewpoints being shown (also fixed size of their storage buffers)
+- Fixed enemy shadow trails on the world map at night
+- Added anti-aliasing support (FXAA and SMAA1x supported)
+- Added texture dumping and overriding functionality
+
+01-11-2013 -- version 0.3 beta
+===============================
+- Fixed normal mapping/lighting of many surfaces in the game
+- Fixed minimap location
+- Added windowed mode (in addition to fullscreen and borderless windowed fullscreen modes)
+
+30-10-2013 -- version 0.2 alpha
+===============================
+- Fixed the enemy shadow/teleport trail location
+- Added borderless windowed fullscreen mode (also fixes alt tab crashing if used)
+- Added option to disable joystick input (since it doesn't work anyway, prevents the known input issue)
+
+29-10-2013 -- version 0.1 alpha
+===============================
+- Initial release
+- This will probably break everything horribly, use at your own risk
