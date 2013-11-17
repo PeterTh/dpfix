@@ -25,8 +25,8 @@ void RSManager::initResources() {
 		}
 	}
 	if(Settings::get().getSsaoStrength()) ssao = new SSAO(d3ddev, rw, rh, Settings::get().getSsaoStrength()-1, 
-		(Settings::get().getSsaoType() == "VSSAO") ? SSAO::VSSAO : ((Settings::get().getSsaoType() == "HBAO") ? SSAO::HBAO : SSAO::SCAO) );
-	//if(Settings::get().getDOFBlurAmount()) gauss = new GAUSS(d3ddev, dofRes*16/9, dofRes);
+		(Settings::get().getSsaoType() == "VSSAO") ? SSAO::VSSAO : SSAO::VSSAO2);
+	if(Settings::get().getAddDOFBlur() > 0) gauss = new GAUSS(d3ddev, (int)(rw*0.35f), (int)(rh*0.35f));
 	d3ddev->CreateTexture(rw, rh, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, &rgbaBuffer1Tex, NULL);
 	rgbaBuffer1Tex->GetSurfaceLevel(0, &rgbaBuffer1Surf);
 	d3ddev->CreateDepthStencilSurface(rw, rh, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, false, &depthStencilSurf, NULL);
@@ -206,6 +206,30 @@ HRESULT RSManager::redirectSetRenderTarget(DWORD RenderTargetIndex, IDirect3DSur
 		bb1->Release();
 	}
 
+	// Perform DoF blur after a viable DoF target has been selected twice in direct succession
+	if(gauss && doDofGauss) {
+		static unsigned dofTargeted = 0;
+		IDirect3DSurface9 *oldRenderTarget;
+		d3ddev->GetRenderTarget(0, &oldRenderTarget);
+		D3DSURFACE_DESC desc;
+		oldRenderTarget->GetDesc(&desc);
+
+		if(gauss->isDoFTarget(desc)) dofTargeted++;
+		else dofTargeted = 0;
+
+		if(dofTargeted == 2) {
+			SDLOG(3,"~~ applying additional DoF blur\n");
+			IDirect3DTexture9 *oldRTtex = getSurfTexture(oldRenderTarget);
+			if(oldRTtex) {
+				storeRenderState();
+				for(size_t i=0; i<Settings::get().getAddDOFBlur(); ++i) gauss->go(oldRTtex, oldRenderTarget);
+				restoreRenderState();
+			}
+			SAFERELEASE(oldRTtex);
+		}
+		SAFERELEASE(oldRenderTarget);
+	}
+
 	if(capturing) {
 		IDirect3DSurface9 *oldRenderTarget, *depthStencilSurface;
 		d3ddev->GetRenderTarget(RenderTargetIndex, &oldRenderTarget);
@@ -222,34 +246,6 @@ HRESULT RSManager::redirectSetRenderTarget(DWORD RenderTargetIndex, IDirect3DSur
 		SAFERELEASE(oldRenderTarget);
 		SAFERELEASE(depthStencilSurface);
 	}
-
-	//// DoF blur stuff
-	//if(gauss && doDofGauss) {
-	//	IDirect3DSurface9 *oldRenderTarget;
-	//	d3ddev->GetRenderTarget(0, &oldRenderTarget);
-	//	D3DSURFACE_DESC desc;
-	//	oldRenderTarget->GetDesc(&desc);
-	//	unsigned dofIndex = isDof(desc.Width, desc.Height);
-	//	if(dofIndex) {
-	//		doft[dofIndex]++;
-	//		SDLOG(6,"DOF index: %u, doft: %u\n", dofIndex, doft[dofIndex]);
-	//		//if(takeScreenshot) {
-	//		//	char buffer[256];
-	//		//	sprintf(buffer, "dof%1u_doft%1u.bmp", dofIndex, doft[dofIndex]);
-	//		//	D3DXSaveSurfaceToFile(buffer, D3DXIFF_BMP, oldRenderTarget, NULL, NULL);
-	//		//}
-	//		if(dofIndex == 1 && doft[1] == 4) {
-	//			IDirect3DTexture9 *oldRTtex = getSurfTexture(oldRenderTarget);
-	//			if(oldRTtex) {
-	//				storeRenderState();
-	//				for(size_t i=0; i<Settings::get().getDOFBlurAmount(); ++i) gauss->go(oldRTtex, oldRenderTarget);
-	//				restoreRenderState();
-	//				oldRTtex->Release();
-	//			}
-	//		} 
-	//	}
-	//	oldRenderTarget->Release();
-	//}
 
 	// store previous RT 0
 	SAFERELEASE(lastRTSurface);
@@ -314,13 +310,55 @@ HRESULT RSManager::redirectSetTexture(DWORD Stage, IDirect3DBaseTexture9 * pText
 		}
 	}
 
-	// Fix dual screen effect rendering
-	//if(isTextureDualScreenEffect(pTexture)) {
-	//	float replacement[4] = { 640.0f, 360.0f, 640.0f, 360.0f; };
-	//	SDLOG(0, "TextureDualScreenEffect SetVertexShaderConstantF OVERRIDE\n");
-	//	d3ddev->SetVertexShaderConstantF(254, replacement, 1);
+	// help with dual screen rendering detection
+	lastT1024 = false;
+	if(onBackbuffer && Stage == 0) {
+		IDirect3DTexture9 *tex;
+		if(pTexture->QueryInterface(IID_IDirect3DTexture9, (void**)&tex) == S_OK) {
+			D3DSURFACE_DESC desc;
+			tex->GetLevelDesc(0, &desc);
+			if(desc.Width == 1024 && desc.Height == 1024 && !(desc.Usage & D3DUSAGE_RENDERTARGET)) {
+				lastT1024 = true;
+			}
+		}
+	}
+	
+	// if we set a renderwidth x renderheight RT to texture 1, we'll render the lightmap 
+	// --> fix pixel offset in lightmap
+	// None of this is actually necessary if you just get the vertex shader parameters right!
+	//if(Stage==1) {
+	//	IDirect3DTexture9 *tex;
+	//	if(pTexture->QueryInterface(IID_IDirect3DTexture9, (void**)&tex) == S_OK) {
+	//		D3DSURFACE_DESC desc;
+	//		tex->GetLevelDesc(0, &desc);
+	//		
+	//		if(desc.Width == Settings::get().getRenderWidth() && desc.Height == Settings::get().getRenderHeight() && (desc.Usage & D3DUSAGE_RENDERTARGET)) {
+	//			static float vdata[16] = {
+	//				-1.0, -1.0,  0.0,  1.0,
+	//				 1.0, -1.0,  1.0,  1.0,
+	//				 1.0,  1.0,  1.0,  0.0,
+	//				-1.0,  1.0,  0.0,  0.0 };
+	//			static IDirect3DVertexBuffer9 *vbuff = NULL;
+	//			const size_t memSize = 16*sizeof(float);
+	//
+	//			// create our vertex buffer on first call
+	//			if(!vbuff) {
+	//				for(unsigned i=0; i<16; i+=4) {
+	//					vdata[i+2] -= 0.000390625f;//((Settings::get().getRenderWidth()-1280.0f)/1280.0f)/Settings::get().getRenderWidth();
+	//					vdata[i+3] -= 0.00069444444f;//((Settings::get().getRenderHeight()-720.0f)/720.0f)/Settings::get().getRenderHeight();
+	//				}
+	//				d3ddev->CreateVertexBuffer(memSize, 0, 0, D3DPOOL_DEFAULT, &vbuff, NULL);
+	//				void *bdata;
+	//				vbuff->Lock(0, memSize, &bdata, 0);
+	//				memcpy(bdata, vdata, memSize);
+	//				vbuff->Unlock();
+	//			}
+	//			SDLOG(3, "~~ pixel offset fix: redirect to own vertex buffer\n");
+	//			d3ddev->SetStreamSource(0, vbuff, 0, 16);
+	//		} 
+	//	}
 	//}
-
+	
 	return d3ddev->SetTexture(Stage, pTexture);
 }
 
@@ -403,6 +441,11 @@ void RSManager::reloadVssao() {
 	ssao = new SSAO(d3ddev, Settings::get().getRenderWidth(), Settings::get().getRenderHeight(), Settings::get().getSsaoStrength()-1, SSAO::VSSAO);
 	SDLOG(0, "Reloaded VSSAO\n");
 }
+void RSManager::reloadVssao2() {
+	SAFEDELETE(ssao); 
+	ssao = new SSAO(d3ddev, Settings::get().getRenderWidth(), Settings::get().getRenderHeight(), Settings::get().getSsaoStrength()-1, SSAO::VSSAO2);
+	SDLOG(0, "Reloaded VSSAO2\n");
+}
 void RSManager::reloadHbao() {
 	SAFEDELETE(ssao); 
 	ssao = new SSAO(d3ddev, Settings::get().getRenderWidth(), Settings::get().getRenderHeight(), Settings::get().getSsaoStrength()-1, SSAO::HBAO);
@@ -439,25 +482,6 @@ HRESULT RSManager::redirectDrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType
 
 HRESULT RSManager::redirectDrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride) {
 	return d3ddev->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
-}
-
-void RSManager::reloadHudVertices() {
-	SDLOG(0, "Reloading HUD vertices\n");
-	std::ifstream vfile;
-	vfile.open(GetDirectoryFile("hudvertices.txt"), std::ios::in);
-	char buffer[256];
-	size_t index = 0;
-	SDLOG(0, "- starting\n");
-	while(!vfile.eof()) {
-		vfile.getline(buffer, 256);
-		if(buffer[0] == '#') continue;
-		if(vfile.gcount() <= 4) continue;
-		
-		sscanf(buffer, "%hd %hd", &hudVertices[index], &hudVertices[index+1]);
-		SDLOG(0, "- read %hd, %hd\n", hudVertices[index], hudVertices[index+1]);
-		index+=2;
-	}
-	vfile.close();	
 }
 
 HRESULT RSManager::redirectD3DXCreateTextureFromFileInMemoryEx(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcData, UINT SrcDataSize, UINT Width, UINT Height, UINT MipLevels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, DWORD Filter, DWORD MipFilter, D3DCOLOR ColorKey, D3DXIMAGE_INFO* pSrcInfo, PALETTEENTRY* pPalette, LPDIRECT3DTEXTURE9* ppTexture) {
@@ -533,7 +557,11 @@ HRESULT RSManager::redirectSetVertexShaderConstantF(UINT StartRegister, CONST fl
 
 	// fix pixel size
 	if(StartRegister == 0 && Vector4fCount == 1) {
-		if(pConstantData[2] == 0.0f && pConstantData[3] == 0.0f) lastVSC0 = true;
+		if(pConstantData[2] == 0.0f && pConstantData[3] == 0.0f) {
+			lastVSC0 = true;
+			float replacement[4] = { 0.5f/lastVp.Width, 0.5f/lastVp.Height, 0.0f, 0.0f };
+			return d3ddev->SetVertexShaderConstantF(StartRegister, replacement, Vector4fCount);
+		}
 		else lastVSC0 = false;
 	}
 
@@ -605,7 +633,7 @@ HRESULT RSManager::redirectSetStreamSource(UINT StreamNumber, IDirect3DVertexBuf
 	}
 
 	// fix dual screen rendering
-	if(firstStreamSource & onBackbuffer && (OffsetInBytes == 192 && Stride == 24)) {
+	if(lastT1024 && firstStreamSource & onBackbuffer && (OffsetInBytes == 192 && Stride == 24)) {
 		IDirect3DBaseTexture9 *t = NULL;
 		IDirect3DTexture9 *tt = NULL;
 		d3ddev->GetTexture(0, &t);
@@ -614,7 +642,7 @@ HRESULT RSManager::redirectSetStreamSource(UINT StreamNumber, IDirect3DVertexBuf
 			tt->GetLevelDesc(0, &desc);
 			if(desc.Width == 1024 && desc.Height == 1024 && ((desc.Usage & D3DUSAGE_RENDERTARGET) == 0)) {
 				float replacement[4] = { 640.0f, 360.0f, 640.0f, 360.0f };
-				SDLOG(0, "TextureDualScreenEffect SetVertexShaderConstantF OVERRIDE\n");
+				SDLOG(0, "DualScreenEffect SetVertexShaderConstantF OVERRIDE\n");
 				d3ddev->SetVertexShaderConstantF(254, replacement, 1);
 			}
 		}
@@ -622,27 +650,30 @@ HRESULT RSManager::redirectSetStreamSource(UINT StreamNumber, IDirect3DVertexBuf
 	}
 
 	// fix pixel offset
+	// not necessary, breaks stuff
 	//SetStreamSource 0: 1B5EE4C0 (0, 16)
 	//~      -1.00000000      -1.00000000       0.00000000       1.00000000
 	//~       1.00000000      -1.00000000       1.00000000       1.00000000
 	//~       1.00000000       1.00000000       1.00000000       0.00000000
 	//~      -1.00000000       1.00000000       0.00000000       0.00000000
-	if(StreamNumber == 0 && OffsetInBytes == 0 && Stride == 16) {
-		D3DVERTEXBUFFER_DESC desc;
-		pStreamData->GetDesc(&desc);
-		float *data;
-		pStreamData->Lock(0, desc.Size, (void**)&data, 0);
-		for(unsigned i=0; i<desc.Size/4; i+=4) {
-			SDLOG(11, "~ %16.8f %16.8f %16.8f %16.8f\n", data[i+0], data[i+1], data[i+2], data[i+3]);
-		}
-		if(FLT_EQ(data[3], 1.0f)) {
-			for(unsigned i=0; i<desc.Size/4; i+=4) {
-				data[i+2] -= 2.0f/lastVp.Width * (std::max)(0.0f, (lastVp.Width-1280.0f)/lastVp.Width);
-				data[i+3] -= 2.0f/lastVp.Height * (std::max)(0.0f, (lastVp.Height-720.0f)/lastVp.Height);
-			}
-		}
-		pStreamData->Unlock();
-	}
+	//if(StreamNumber == 0 && OffsetInBytes == 0 && Stride == 16
+	//	/*	&& lastVp.Width == Settings::get().getRenderWidth() && lastVp.Height == Settings::get().getRenderHeight()*/) {
+	//	D3DVERTEXBUFFER_DESC desc;
+	//	pStreamData->GetDesc(&desc);
+	//	float *data;
+	//	pStreamData->Lock(0, desc.Size, (void**)&data, 0);
+	//	for(unsigned i=0; i<desc.Size/4; i+=4) {
+	//		SDLOG(11, "~ %16.8f %16.8f %16.8f %16.8f\n", data[i+0], data[i+1], data[i+2], data[i+3]);
+	//	}
+	//	if(FLT_EQ(data[3], 1.0f)) {
+	//		SDLOG(3, "~~~ Changing stream source data!\n");
+	//		for(unsigned i=0; i<desc.Size/4; i+=4) {
+	//			data[i+2] -= ((lastVp.Width-1280.0f)/1280.0f)/1280.0f;
+	//			data[i+3] -= ((lastVp.Height-720.0f)/720.0f)/720.0f;
+	//		}
+	//	}
+	//	pStreamData->Unlock();
+	//}
 
 	firstStreamSource = false;
 	return d3ddev->SetStreamSource(StreamNumber, pStreamData, OffsetInBytes, Stride);

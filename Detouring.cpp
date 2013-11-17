@@ -126,17 +126,14 @@ void endDetour() {
 
 // Window stuff
 
-typedef BOOL (WINAPI * AdjustWindowRect_FNType)(__inout LPRECT lpRect, __in DWORD dwStyle, __in BOOL bMenu);
 AdjustWindowRect_FNType TrueAdjustWindowRect = AdjustWindowRect;
 BOOL WINAPI DetouredAdjustWindowRect(__inout LPRECT lpRect, __in DWORD dwStyle, __in BOOL bMenu) {
 	return true;
 }
-typedef BOOL (WINAPI * AdjustWindowRectEx_FNType)(_Inout_ LPRECT lpRect, _In_ DWORD dwStyle, _In_ BOOL bMenu, _In_ DWORD dwExStyle);
 AdjustWindowRectEx_FNType TrueAdjustWindowRectEx = AdjustWindowRectEx;
 BOOL WINAPI DetouredAdjustWindowRectEx(_Inout_ LPRECT lpRect, _In_ DWORD dwStyle, _In_ BOOL bMenu, _In_ DWORD dwExStyle) {
 	return true;
 }
-
 SetWindowPos_FNType TrueSetWindowPos = SetWindowPos;
 BOOL WINAPI DetouredSetWindowPos(_In_ HWND hWnd, _In_opt_ HWND hWndInsertAfter, _In_ int X, _In_ int Y, _In_ int cx, _In_ int cy, _In_ UINT uFlags) {
 	return true;

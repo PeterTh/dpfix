@@ -58,7 +58,7 @@ void WindowManager::toggleBorderlessFullscreen() {
 		::SetWindowLong(hwnd, GWL_STYLE, prevStyle);
 		::SetWindowLong(hwnd, GWL_EXSTYLE, prevExStyle);
 		RECT desiredRect = prevWindowRect;
-		::AdjustWindowRect(&desiredRect, prevStyle, false);
+		TrueAdjustWindowRect(&desiredRect, prevStyle, false);
 		int wWidth = desiredRect.right - desiredRect.left, wHeight = desiredRect.bottom - desiredRect.top;
 		TrueSetWindowPos(hwnd, NULL, prevWindowRect.left, prevWindowRect.top, wWidth, wHeight, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER);
 	}
@@ -103,7 +103,7 @@ void WindowManager::resize(unsigned clientW, unsigned clientH) {
 	desiredRect.right = monitorWidth - (widthDiff / 2);
 	desiredRect.bottom = monitorHeight - (heightDiff / 2);
  	LONG lStyle = ::GetWindowLong(hwnd, GWL_STYLE);
- 	::AdjustWindowRect(&desiredRect, lStyle, false);
+ 	TrueAdjustWindowRect(&desiredRect, lStyle, false);
 	TrueSetWindowPos(hwnd, NULL, desiredRect.left, desiredRect.top, desiredRect.right-desiredRect.left, desiredRect.bottom-desiredRect.top, SWP_NOZORDER);
 	SDLOG(0, "Set Window rect to %s\n", RectToString(&desiredRect));
 	startWindowDetour();
@@ -113,9 +113,9 @@ void WindowManager::maintainWindowSize() {
 	if(!borderlessFullscreen) {
 		HWND hwnd = ::GetActiveWindow();
 		RECT rect;
-		::GetClientRect(hwnd, &rect);
+		::GetWindowRect(hwnd, &rect);
 		
-		if(rect.right-rect.left != Settings::get().getPresentWidth() || rect.bottom-rect.top != Settings::get().getPresentHeight()) {
+		if(rect.right-rect.left < (long)Settings::get().getPresentWidth() || rect.bottom-rect.top < (long)Settings::get().getPresentHeight()) {
 			SDLOG(0, "Restoring window size, previous rect: %s\n", RectToString(&rect));
 			resize(Settings::get().getPresentWidth(), Settings::get().getPresentHeight());
 		}

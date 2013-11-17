@@ -45,10 +45,6 @@ public:
 		#undef SETTING
 	}
 
-	unsigned getCurrentFPSLimit();
-	void setCurrentFPSLimit(unsigned limit);
-	void toggle30FPSLimit();
-
 	void elevateLogLevel(unsigned level);
 	void restoreLogLevel();
 };

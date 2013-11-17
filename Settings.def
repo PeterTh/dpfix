@@ -7,6 +7,7 @@ SETTING(unsigned, RenderHeight, "renderHeight", 720);
 SETTING(unsigned, FilteringOverride, "filteringOverride", 0);
 
 SETTING(bool, ImproveDOF, "improveDOF", false);
+SETTING(unsigned, AddDOFBlur, "addDOFBlur", 0);
 
 SETTING(unsigned, AAQuality, "aaQuality", 0);
 SETTING(std::string, AAType, "aaType", "FXAA");
@@ -14,12 +15,6 @@ SETTING(std::string, AAType, "aaType", "FXAA");
 SETTING(unsigned, SsaoStrength, "ssaoStrength", 0);
 SETTING(unsigned, SsaoScale, "ssaoScale", 0);
 SETTING(std::string, SsaoType, "ssaoType", "VSSAO");
-
-SETTING(bool, UnlockFPS, "unlockFPS", 0);
-SETTING(unsigned, FPSLimit, "FPSlimit", 30);
-SETTING(unsigned, FPSThreshold, "FPSthreshold", 28);
-
-SETTING(bool, EnableTripleBuffering, "enableTripleBuffering", false);
 
 SETTING(unsigned, ShadowMapScale, "shadowMapScale", 1);
 SETTING(bool, ImproveShadowPrecision, "improveShadowPrecision", false);

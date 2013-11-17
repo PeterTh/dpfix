@@ -30,7 +30,6 @@ void Settings::load() {
 	if(getPresentWidth() == 0) PresentWidth = getRenderWidth();
 	if(getPresentHeight() == 0) PresentHeight = getRenderHeight();
 	
-	curFPSlimit = getFPSLimit();
 	baseLogLevel = LogLevel;
 }
 
@@ -59,18 +58,6 @@ void Settings::shutdown() {
 		inited = false;
 	}
 }
-
-unsigned Settings::getCurrentFPSLimit() {
-	return curFPSlimit;
-}
-void Settings::setCurrentFPSLimit(unsigned limit) {
-	curFPSlimit = limit;
-}
-void Settings::toggle30FPSLimit() {
-	if(curFPSlimit == 30) curFPSlimit = getFPSLimit();
-	else curFPSlimit = 30;
-}
-
 
 void Settings::elevateLogLevel(unsigned level) {
 	LogLevel = level;

@@ -57,7 +57,7 @@ class RSManager {
 
 	unsigned numKnownTextures, foundKnownTextures, nrts, mainRTCount, vsswitch;
 	
-	bool onBackbuffer, firstStreamSource;
+	bool onBackbuffer, firstStreamSource, lastT1024;
 
 	D3DVIEWPORT9 lastVp;
 
@@ -102,18 +102,18 @@ public:
 	void enableTakeScreenshot();
 	void enableTakeHudlessScreenshot();
 	bool takingScreenshot() { return takeScreenshot; }
+
 	void toggleAA() { doAA = !doAA; }
 	void toggleVssao() { doSsao = !doSsao; }
 	void toggleHideHud() { hideHud = !hideHud; }
 	void toggleDofGauss() { doDofGauss = !doDofGauss; }
+
 	void reloadVssao();
+	void reloadVssao2();
 	void reloadHbao();
 	void reloadScao();
 	void reloadGauss();
 	void reloadAA();
-	
-	INT16 hudVertices[32];
-	void reloadHudVertices();
 	
 	void registerMainRenderTexture(IDirect3DTexture9* pTexture);
 	void registerMainRenderSurface(IDirect3DSurface9* pSurface);
@@ -122,16 +122,10 @@ public:
 	void registerD3DXCompileShader(LPCSTR pSrcData, UINT srcDataLen, const D3DXMACRO *pDefines, LPD3DXINCLUDE pInclude, LPCSTR pFunctionName, LPCSTR pProfile, DWORD Flags, LPD3DXBUFFER * ppShader, LPD3DXBUFFER * ppErrorMsgs, LPD3DXCONSTANTTABLE * ppConstantTable);
 	
 	HRESULT redirectSetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9* pRenderTarget);
-
-	void finishHudRendering();
-	void pauseHudRendering();
-	void resumeHudRendering();
-
 	HRESULT redirectStretchRect(IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter);
 	HRESULT redirectSetTexture(DWORD Stage, IDirect3DBaseTexture9 * pTexture);
 	HRESULT redirectSetDepthStencilSurface(IDirect3DSurface9* pNewZStencil);
 	HRESULT redirectPresent(CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND hDestWindowOverride, CONST RGNDATA * pDirtyRegion);
-	
 	HRESULT redirectDrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumVertices, UINT PrimitiveCount, CONST void* pIndexData, D3DFORMAT IndexDataFormat, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	HRESULT redirectDrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride);
 	HRESULT redirectD3DXCreateTextureFromFileInMemoryEx(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcData, UINT SrcDataSize, UINT Width, UINT Height, UINT MipLevels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, DWORD Filter, DWORD MipFilter, D3DCOLOR ColorKey, D3DXIMAGE_INFO* pSrcInfo, PALETTEENTRY* pPalette, LPDIRECT3DTEXTURE9* ppTexture);

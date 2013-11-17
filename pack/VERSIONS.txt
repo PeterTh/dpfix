@@ -1,8 +1,11 @@
 
-??-11-2013 -- version 0.9
+16-11-2013 -- version 0.9
 ===============================
+- Fixed the issues introduced on some systems by 0.8
+- Fixed Video size during profiling
+- *Really* fixed the pixel offset error, at all resolutions
+- Added high quality "VSSAO2" option
 - Adjusted windowed mode so that it's possible to move the window
-
 
 10-11-2013 -- version 0.8
 ===============================

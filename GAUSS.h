@@ -13,6 +13,7 @@ public:
     virtual ~GAUSS();
 
 	void go(IDirect3DTexture9 *input, IDirect3DSurface9 *dst);
+	bool isDoFTarget(const D3DSURFACE_DESC& desc) const;
 
 private:
 	int width, height;

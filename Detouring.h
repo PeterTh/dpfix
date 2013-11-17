@@ -19,8 +19,12 @@ void endDetour();
 void startJoyDetour();
 void endJoyDetour();
 
-typedef BOOL (WINAPI * SetWindowPos_FNType)(_In_ HWND hWnd, _In_opt_ HWND hWndInsertAfter, _In_ int X, _In_ int Y, _In_ int cx, _In_ int cy, _In_ UINT uFlags);
-extern SetWindowPos_FNType TrueSetWindowPos;
-
 void startWindowDetour();
 void endWindowDetour();
+
+typedef BOOL (WINAPI * SetWindowPos_FNType)(_In_ HWND hWnd, _In_opt_ HWND hWndInsertAfter, _In_ int X, _In_ int Y, _In_ int cx, _In_ int cy, _In_ UINT uFlags);
+extern SetWindowPos_FNType TrueSetWindowPos;
+typedef BOOL (WINAPI * AdjustWindowRect_FNType)(__inout LPRECT lpRect, __in DWORD dwStyle, __in BOOL bMenu);
+extern AdjustWindowRect_FNType TrueAdjustWindowRect;
+typedef BOOL (WINAPI * AdjustWindowRectEx_FNType)(_Inout_ LPRECT lpRect, _In_ DWORD dwStyle, _In_ BOOL bMenu, _In_ DWORD dwExStyle);
+extern AdjustWindowRectEx_FNType TrueAdjustWindowRectEx;

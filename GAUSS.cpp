@@ -68,3 +68,7 @@ void GAUSS::go(IDirect3DTexture9 *input, IDirect3DSurface9 *dst) {
 	effect->EndPass();
 	effect->End();
 }
+
+bool GAUSS::isDoFTarget(const D3DSURFACE_DESC& desc) const {
+	return desc.Width == width && desc.Height == height;
+}

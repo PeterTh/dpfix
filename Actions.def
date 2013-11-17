@@ -21,11 +21,10 @@ ACTION(toggleDofGauss, RSManager::get().toggleDofGauss())
 
 ACTION(toggleHUD, RSManager::get().toggleHideHud())
 
-ACTION(toggle30FPSLimit, Settings::get().toggle30FPSLimit())
-
 // Development Actions
 
 ACTION(reloadVSSAOEffect, RSManager::get().reloadVssao())
+ACTION(reloadVSSAO2Effect, RSManager::get().reloadVssao2())
 ACTION(reloadHBAOEffect, RSManager::get().reloadHbao())
 ACTION(reloadSCAOEffect, RSManager::get().reloadScao())
 ACTION(reloadGAUSSEffect, RSManager::get().reloadGauss())

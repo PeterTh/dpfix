@@ -267,7 +267,6 @@ HRESULT APIENTRY hkIDirect3DDevice9::CreateTexture(UINT Width, UINT Height, UINT
 	}
 
 	// shadowmap RTs
-	//else if((Width == Height || Width == Height*2) && ((Usage & D3DUSAGE_RENDERTARGET) || Format == D3DFMT_D16 || Format == D3DFMT_D24S8)) {
 	else if((Width == Height) && ((Usage & D3DUSAGE_RENDERTARGET && Format == D3DFMT_A8R8G8B8) || Format == D3DFMT_D16)) {
 		Width *= Settings::get().getShadowMapScale();
 		Height *= Settings::get().getShadowMapScale();
@@ -284,8 +283,9 @@ HRESULT APIENTRY hkIDirect3DDevice9::CreateTexture(UINT Width, UINT Height, UINT
 		SDLOG(1, " - main RT OVERRIDE to %4u/%4u!\n", Width, Height);
 	}
 
-	// mirror buffers
-	else if((Width == 640 && Height == 360) || (Width == 320 && Height == 180)) {
+	// mirror buffers -- be careful not to hit normal textures by mistake!
+	else if(((Width == 640 && Height == 360) || (Width == 320 && Height == 180))
+			&& (Format == D3DFMT_D24S8 || Usage & D3DUSAGE_RENDERTARGET)) {
 		Width *= Settings::get().getReflectionScale();
 		Height *= Settings::get().getReflectionScale();
 	}
